@@ -27,13 +27,13 @@ def create_md_message(flight: Flight, flight_data: FlightData) -> str:
     ]
 
     if flight.operator is not None:
-        message_parts.append(f'*Operator:* {flight.operator}')
+        message_parts.append(f'*Operator:* {escape_markdown_2(flight.operator)}')
     if flight.origin.name is not None:
-        message_parts.append(f'*Origin:* {flight.origin.name} \\({flight.origin.code}\\)')
+        message_parts.append(f'*Origin:* {escape_markdown_2(flight.origin.name)} \\({flight.origin.code}\\)')
     if flight.destination.name is not None:
-        message_parts.append(f'*Destination:* {flight.destination.name} \\({flight.destination.code}\\)')
+        message_parts.append(f'*Destination:* {escape_markdown_2(flight.destination.name)} \\({flight.destination.code}\\)')
     if flight.aircraft_type is not None:
-        message_parts.append(f'*Aircraft type:* {flight.aircraft_type}')
+        message_parts.append(f'*Aircraft type:* {escape_markdown_2(flight.aircraft_type)}')
     if flight.registration is not None:
         message_parts.append(f'*Registration:* {escape_markdown_2(flight.registration)}')
     if flight.actual_runway_off is not None:
