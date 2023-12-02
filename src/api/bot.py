@@ -89,7 +89,7 @@ class AuthHandler:
 
     async def handle(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         user = str(update.effective_user.id)
-        if update.effective_user.id not in self.allowed_users:
+        if user not in self.allowed_users:
             await update.message.reply_text('You are not authorised to use this bot')
             raise ApplicationHandlerStop
 
