@@ -11,8 +11,8 @@ from telegram.ext import (
     CallbackContext
 )
 from telegram.helpers import escape_markdown
-from src.api.aero_api import AeroAPI
-from src.api.models import Flight, FlightData
+from src.api import AeroAPI
+from src.models import Flight, FlightData
 
 def escape_markdown_2(text: str) -> str:
     """

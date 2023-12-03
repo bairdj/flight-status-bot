@@ -1,6 +1,6 @@
 import os
-from src.api.aero_api import AeroAPI
-from src.api.bot import FlightStatusBot
+from src.api import AeroAPI
+from src.bot import FlightStatusBot
 
 def get_param_from_env(param_name: str) -> str:
     """
