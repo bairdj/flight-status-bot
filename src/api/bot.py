@@ -94,13 +94,20 @@ class AuthHandler:
             raise ApplicationHandlerStop
 
 class FlightStatusBot:
-    def __init__(self, api: AeroAPI, token: str, allowed_users: list[str]):
+    def __init__(self, api: AeroAPI, bot_token: str, allowed_users: list[str]):
+        """
+        Create a new bot instance.
+
+        :param api: The AeroAPI instance to use.
+        :param bot_token: The Telegram bot token.
+        :param allowed_users: A list of Telegram user IDs that are allowed to use the bot.
+        """
         self.api = api
-        self.token = token
+        self.bot_token = bot_token
         self.allowed_users = allowed_users
 
     def get_application(self):
-        application = ApplicationBuilder().token(self.token).build()
+        application = ApplicationBuilder().token(self.bot_token).build()
         auth_handler = AuthHandler(self.allowed_users)
         status_handler = StatusHandler(self.api)
         application.add_handler(TypeHandler(Update, auth_handler.handle), -1)
