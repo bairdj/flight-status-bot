@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
 from enum import Enum
+from pydantic import BaseModel
 
 class FlightAirportRef(BaseModel):
     code: Optional[str] = None
@@ -14,28 +14,32 @@ class FlightAirportRef(BaseModel):
     airport_info_url: Optional[str] = None
 
 class AltitudeChange(Enum):
-    climb = 'C'
-    descent = 'D'
-    level = '-'
+    CLIMB = 'C'
+    DESCENT = 'D'
+    LEVEL = '-'
 
-    # Method to create a nice human readable string to describe the altitude change
-    def describe(self):
-        if self == AltitudeChange.climb:
+    def describe(self) -> str:
+        """
+        Create a human-readable description of the altitude change.
+        """
+        if self == AltitudeChange.CLIMB:
             return 'Climbing'
-        elif self == AltitudeChange.descent:
+        if self == AltitudeChange.DESCENT:
             return 'Descending'
-        elif self == AltitudeChange.level:
+        if self == AltitudeChange.LEVEL:
             return 'Level'
 
+        raise ValueError(f'Unknown altitude change {self}')
+
 class PositionUpdateType(Enum):
-    projected = 'P'
-    oceanic = 'O'
-    radar = 'Z'
-    adsb = 'A'
-    multilateration = 'M'
-    datalink = 'D'
-    surface = 'X'
-    space = 'S'
+    PROJECTED = 'P'
+    OCEANIC = 'O'
+    RADAR = 'Z'
+    ADSB = 'A'
+    MULTILATERATION = 'M'
+    DATALINK = 'D'
+    SURFACE = 'X'
+    SPACE = 'S'
 
 class FlightPosition(BaseModel):
     fa_flight_id: Optional[str] = None
