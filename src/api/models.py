@@ -1,7 +1,7 @@
-from pydantic import BaseModel
-from enum import Enum
 from datetime import datetime
 from typing import Optional, List
+from pydantic import BaseModel
+from enum import Enum
 
 class FlightAirportRef(BaseModel):
     code: Optional[str] = None

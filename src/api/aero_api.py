@@ -1,5 +1,5 @@
-import requests
 from datetime import datetime, timedelta, timezone
+import requests
 from .models import FlightData, Flight
 
 class ApiError(Exception):

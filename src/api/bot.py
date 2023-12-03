@@ -1,11 +1,23 @@
+from typing import Callable, Awaitable
+from datetime import datetime, timezone, timedelta
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, ApplicationHandlerStop, TypeHandler
+from telegram.ext import (
+    ApplicationBuilder,
+    CommandHandler,
+    ContextTypes,
+    ApplicationHandlerStop,
+    TypeHandler,
+    Application,
+    CallbackContext
+)
 from telegram.helpers import escape_markdown
 from src.api.aero_api import AeroAPI
 from src.api.models import Flight, FlightData
-from datetime import datetime, timezone, timedelta
 
 def escape_markdown_2(text: str) -> str:
+    """
+    Wrapper around telegram.helpers.escape_markdown to use version 2 of the API.
+    """
     return escape_markdown(text, version=2)
 
 def format_timedelta(td: timedelta) -> str:
@@ -49,8 +61,7 @@ def create_md_message(flight: Flight, flight_data: FlightData) -> str:
         time_to_go = flight_data.predicted_on - datetime.now(timezone.utc)
         if time_to_go > timedelta(minutes=0):
             message_parts.append(f'*Time to landing:* {format_timedelta(time_to_go)}')
-    
-    
+
     message_parts.append('\n*Flight status*')
     message_parts.append(f'*Altitude*: {flight_data.last_position.altitude * 100} ft')
     message_parts.append(f'*Ground speed*: {flight_data.last_position.groundspeed} kts')
@@ -59,41 +70,19 @@ def create_md_message(flight: Flight, flight_data: FlightData) -> str:
     message_parts.append(f'*Flight phase*: {flight_data.last_position.altitude_change.describe()}')
     return '\n'.join(message_parts)
 
-
-class StatusHandler:
-
-    def __init__(self, api):
-        self.api = api
-
-    async def handle(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        args = context.args
-        # Should be a single ident
-        if len(args) != 1:
-            await update.message.reply_text('Usage: /status <flight number>')
-            return
-        flight_number = args[0]
-        flight = self.api.get_flight(flight_number)
-        if flight is None:
-            await update.message.reply_text('Flight not found')
-            return
-        flight_data = self.api.get_flight_data(flight.fa_flight_id)
-        message = create_md_message(flight, flight_data)
-        await update.message.reply_markdown_v2(message)
-        await update.message.reply_location(flight_data.last_position.latitude, flight_data.last_position.longitude)
-
-
-class AuthHandler:
-
-    def __init__(self, allowed_users):
-        self.allowed_users = allowed_users
-
-    async def handle(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        user = str(update.effective_user.id)
-        if user not in self.allowed_users:
-            await update.message.reply_text('You are not authorised to use this bot')
-            raise ApplicationHandlerStop
-
 class FlightStatusBot:
+    """
+    A Telegram bot for checking flight status.
+
+    This bot uses the AeroAPI to fetch flight data and responds to user commands on Telegram.
+    It supports a command for checking the status of a flight.
+
+    Only users with IDs in the `allowed_users` list are authorised to use the bot.
+
+    :param api: An instance of AeroAPI to fetch flight data.
+    :param bot_token: The token for the Telegram bot.
+    :param allowed_users: A list of Telegram user IDs that are allowed to use the bot.
+    """
     def __init__(self, api: AeroAPI, bot_token: str, allowed_users: list[str]):
         """
         Create a new bot instance.
@@ -106,10 +95,49 @@ class FlightStatusBot:
         self.bot_token = bot_token
         self.allowed_users = allowed_users
 
-    def get_application(self):
+    def get_application(self) -> Application:
+        """
+        Set up the Telegram Application instance.
+
+        :return: The Application instance.
+        """
         application = ApplicationBuilder().token(self.bot_token).build()
-        auth_handler = AuthHandler(self.allowed_users)
-        status_handler = StatusHandler(self.api)
-        application.add_handler(TypeHandler(Update, auth_handler.handle), -1)
-        application.add_handler(CommandHandler('status', status_handler.handle))
+        application.add_handler(TypeHandler(Update, self._get_auth_handler), -1)
+        application.add_handler(CommandHandler('status', self._get_status_handler()))
         return application
+
+    def _get_auth_handler(self) -> Callable[[Update, CallbackContext], Awaitable[None]]:
+        """
+        Callback function to check if the user is authorised.
+        """
+        async def auth_handler(update: Update, context: CallbackContext):
+            user = str(update.effective_user.id)
+            if user not in self.allowed_users:
+                await update.message.reply_text('You are not authorised to use this bot')
+                raise ApplicationHandlerStop
+        return auth_handler
+
+    def _get_status_handler(self) -> Callable[[Update, CallbackContext], Awaitable[None]]:
+        """
+        Callback function for the /status command.
+        """
+        async def status_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+            args = context.args
+            # Should be a single ident
+            if len(args) != 1:
+                await update.message.reply_text('Usage: /status <flight number>')
+                return
+            flight_number = args[0]
+            flight = self.api.get_flight(flight_number)
+            if flight is None:
+                await update.message.reply_text('Flight not found')
+                return
+            flight_data = self.api.get_flight_data(flight.fa_flight_id)
+            message = create_md_message(flight, flight_data)
+            await update.message.reply_markdown_v2(message)
+            await update.message.reply_location(
+                latitude=flight_data.last_position.latitude,
+                longitude=flight_data.last_position.longitude
+            )
+
+        return status_handler
