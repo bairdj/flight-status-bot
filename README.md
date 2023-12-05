@@ -23,6 +23,9 @@ You must also have a Telegram bot token. See details [here](https://core.telegra
 You should also obtain your own Telegram chat ID to restrict the bot to your own chat. Bots are otherwise publicly
 accessible and could allow others to use your API key and incur costs.
 
+Optionally, the bot can use the [LocationIQ](https://locationiq.com/) API to reverse geocode the current location
+to a labelled region. This also works with naming the ocean that the flight is currently over, if applicable.
+
 
 ## Running
 
@@ -51,6 +54,7 @@ services:
       AERO_API_KEY: your_key
       TELEGRAM_API_KEY: your_token
       ALLOWED_USERS: your_chat_id
+      LOCATIONIQ_API_KEY: your_key # Optional
     restart: unless-stopped
 ```
 

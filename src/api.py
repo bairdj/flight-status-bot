@@ -57,3 +57,40 @@ class AeroAPI:
         if response.status_code != 200:
             raise ApiError(f'GET {endpoint} returned {response.status_code}')
         return FlightData.model_validate_json(response.content)
+
+class LocationApi:
+    """
+    A class to interact with the LocationIQ API.
+
+    This class provides a method to reverse geocode a location using
+    latitude and longitude.
+
+    :param api_key: The API key for the LocationIQ service.
+    """
+
+    def __init__(self, api_key):
+        self.api_key = api_key
+
+    def geocode_location(self, latitude, longitude) -> str:
+        """
+        Reverse geocode a location using the LocationIQ API.
+        Intended to work at the county level.
+
+        @param latitude: Latitude of location
+        @param longitude: Longitude of location
+        @return: A string describing the location
+        """
+        endpoint = 'https://eu1.locationiq.com/v1/reverse'
+        params = {
+            'key': self.api_key,
+            'lat': latitude,
+            'lon': longitude,
+            'format': 'json',
+            'zoom': 8, # County level
+            'oceans': 1,
+            'addressdetails': 0
+        }
+        response = requests.get(endpoint, params=params)
+        if response.status_code != 200:
+            raise ApiError(f'GET {endpoint} returned {response.status_code}')
+        return response.json()['display_name']
